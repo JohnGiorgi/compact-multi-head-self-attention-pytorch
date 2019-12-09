@@ -14,13 +14,10 @@ matrix:
   include:
     # Pyroma check should be python independent, choose latest.
     - name: "check package friendliness with pyroma"
-      python: 3.8
+      python: 3.7
       env: TOXENV=pyroma
     - name: "run unit tests against python 3.7"
       python: 3.7
-      env: TOXENV='{clean, py, report}'
-    - name: "run unit tests against python 3.8"
-      python: 3.8
       env: TOXENV='{clean, py, report}'
 
 install: pip install tox
