@@ -8,7 +8,7 @@ from modules.lama import LAMA
 
 class LAMAPooler(LAMA):
     """
-    A thin wrapper around ``LAMA``, which applies LAMA to ``input`` and returns the flattened
+    A thin wrapper around ``LAMA``, which applies LAMA to ``inputs`` and returns the flattened
     structed sentence embedding matrix.
 
     Parameters
@@ -36,11 +36,11 @@ class LAMAPooler(LAMA):
     ) -> None:
         super().__init__(num_heads, input_dim, activation, normalize, bias)
 
-    def forward(self, input, mask=None):
-        similarities = self._forward_internal(input, mask)
+    def forward(self, inputs, mask=None):
+        similarities = self._forward_internal(inputs, mask)
 
         if self._normalize:
             similarities = F.softmax(similarities, dim=0)
 
-        sentence_embedding_matrix = similarities @ input
+        sentence_embedding_matrix = similarities @ inputs
         return torch.flatten(sentence_embedding_matrix)
