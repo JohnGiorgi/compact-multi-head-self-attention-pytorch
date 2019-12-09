@@ -11,6 +11,16 @@ class LAMAPooler(LAMA):
     A thin wrapper around ``LAMA``, which applies LAMA to ``inputs`` and returns the flattened
     structed sentence embedding matrix.
 
+    Inputs:
+
+    - inputs: shape ``(batch_size, max_sequence_length, input_dim)``
+    - mask: shape ``(batch_size, max_sequence_length)``, should be 0 at timesteps where attention
+      will be masked (e.g. pad tokens), and 1 otherwise.
+
+    Output:
+
+    - pooled sequence embeddings: shape ``(batch_size, num_heads * input_dim)``.
+
     Parameters
     ----------
     num_heads : ``int``, required.
@@ -36,11 +46,14 @@ class LAMAPooler(LAMA):
     ) -> None:
         super().__init__(num_heads, input_dim, activation, normalize, bias)
 
-    def forward(self, inputs, mask=None):
+    def forward(self, inputs: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
         similarities = self._forward_internal(inputs, mask)
 
         if self._normalize:
+            if mask is not None:
+                # The 2 dimension (num_heads) will be broadcasted
+                similarities = similarities.masked_fill(mask.unsqueeze(1) == 0, -1e9)
             similarities = F.softmax(similarities, dim=0)
 
-        sentence_embedding_matrix = similarities @ inputs
-        return torch.flatten(sentence_embedding_matrix)
+        sequence_embedding_matrix = similarities @ inputs
+        return sequence_embedding_matrix.view(inputs.size(0), -1)

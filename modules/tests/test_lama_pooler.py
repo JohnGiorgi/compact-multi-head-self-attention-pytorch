@@ -5,7 +5,7 @@ class TestLAMAPooler(object):
     """Collects all unit tests for `modules.lama_pooler.LAMAPooler`.
     """
     def test_attributes_after_initialization(self, lama_pooler):
-        args, lama_pooler = lama_pooler
+        args, lama_pooler = lama_pooler()
 
         assert lama_pooler._activation == args['activation']
         assert lama_pooler._normalize == args['normalize']
@@ -15,13 +15,14 @@ class TestLAMAPooler(object):
         # TODO (John): Switch this when we figure out the bias and make it default to True
         assert lama_pooler._bias is None
 
-    def test_output_size_without_mask(self, lama_pooler):
-        args, lama_pooler = lama_pooler
+    def test_output_forward_without_mask(self, lama_pooler):
+        args, lama_pooler = lama_pooler()
 
-        max_seq_len = 50  # Maximum length of the input sequence
+        # Keep these small so testing is fast
+        batch_size = 4
+        max_seq_len = 25  # Maximum length of the input sequence
 
-        inputs = torch.randn(max_seq_len, args['input_dim'])
+        inputs = torch.randn(batch_size, max_seq_len, args['input_dim'])
         pooled_output = lama_pooler(inputs)
 
-        assert len(pooled_output.size()) == 1
-        assert pooled_output.size(0) == (args['num_heads'] * args['input_dim'])
+        assert pooled_output.size() == (batch_size, args['num_heads'] * args['input_dim'])

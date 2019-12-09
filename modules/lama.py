@@ -8,9 +8,19 @@ from torch.nn.parameter import Parameter
 
 class LAMA(Module):
     """
-    This class implements the low rank factorization multi-head self-attention mechanism detailed
-    in the paper `Low Rank Factorization for Compact Multi-Head Self-Attention
-    <https://arxiv.org/abs/1912.00835>`_ .
+    This class implements the low rank factorization multi-head self-attention mechanism described
+    in `"Low Rank Factorization for Compact Multi-Head Self-Attention"
+    <https://arxiv.org/abs/1912.00835>`_ by Mehta et al., 2019.
+
+    Inputs:
+
+    - inputs: shape ``(batch_size, max_sequence_length, input_dim)``
+    - mask: shape ``(batch_size, max_sequence_length)``, should be 0 at timesteps where attention
+      will be masked (e.g. pad tokens), and 1 otherwise.
+
+    Output:
+
+    - attention: shape ``(batch_size, num_heads, max_sequence_length)``.
 
     Parameters
     ----------
@@ -20,7 +30,7 @@ class LAMA(Module):
         The size of the last dimension of the input tensor.
     activation : ``Callable``, optional (default=``torch.tanh``)
         An activation function applied after the attention calculation. Default is
-        ``torch.tanh``. Set to ``None`` to use a linear activation (i.e. no activation).
+        ``torch.tanh``. Set to ``None`` to use linear activation (i.e. no activation).
     normalize : ``bool``, optional (default: ``True``)
         If true, we normalize the computed similarities with a softmax, to return a probability
         distribution for each attention head.  If false, this is just computing a similarity score.
@@ -44,6 +54,8 @@ class LAMA(Module):
         self._c = Parameter(torch.Tensor(input_dim, 1))
 
         if bias:
+            # TODO (John): out_features is equal to max_sequence_length. How to get this without
+            # asking for it?
             self._bias = Parameter(torch.Tensor(out_features))
         else:
             self.register_parameter('_bias', None)
@@ -56,17 +68,21 @@ class LAMA(Module):
         if self._bias is not None:
             self._bias.data.fill_(0)
 
-    def forward(self, inputs, mask=None):
+    def forward(self, inputs: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
         similarities = self._forward_internal(inputs, mask)
 
         if self._normalize:
-            return F.softmax(similarities, dim=0)
+            if mask is not None:
+                # The 2 dimension (num_heads) will be broadcasted
+                similarities = similarities.masked_fill(mask.unsqueeze(1) == 0, -1e9)
+            return F.softmax(similarities, dim=-1)
         else:
             return similarities
 
-    def _forward_internal(self, inputs, mask=None):
+    def _forward_internal(self, inputs: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         # TODO (John): Missing L2 norm
-        scores = self._activation((self._p.t() @ self._c) * (self._q.t() @ inputs.t()))
-        if mask is not None:
-            scores = scores.masked_fill(mask == 0, -1e9)
-        return scores
+        # See Eq. 3.13 of https://arxiv.org/abs/1912.00835
+        q_t_h_t = self._q.t() @ inputs.transpose(1, 2)
+        p_t_c_g = self._p.t() @ self._c.expand(-1, inputs.size(1))
+
+        return self._activation(p_t_c_g * q_t_h_t)

@@ -1,0 +1,6 @@
+[run]
+omit =
+  # omit test files themselves
+  modules/tests/*
+  # omit any init files
+  modules/__init__.py
