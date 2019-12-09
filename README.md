@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/JohnGiorgi/compact-multi-head-self-attention-pytorch.svg?branch=master)](https://travis-ci.org/JohnGiorgi/compact-multi-head-self-attention-pytorch)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/910dc1e31a6a4e0daff8ae42b7d3205f)](https://www.codacy.com/manual/JohnGiorgi/compact-multi-head-self-attention-pytorch?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=JohnGiorgi/compact-multi-head-self-attention-pytorch&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/910dc1e31a6a4e0daff8ae42b7d3205f)](https://www.codacy.com/manual/JohnGiorgi/compact-multi-head-self-attention-pytorch?utm_source=github.com&utm_medium=referral&utm_content=JohnGiorgi/compact-multi-head-self-attention-pytorch&utm_campaign=Badge_Coverage)
+
 # Pytorch Implementation of Low Rank Factorization for Compact Multi-Head Self-Attention
 
 This is a PyTorch implementation of the __L__ ow Rank F __a__ ctorization for Compact __M__ ulti-Head __A__ ttention (LAMA) mechanism and the corresponding pooler introduced in the paper: "[Low Rank Factorization for Compact Multi-Head Self-Attention](https://arxiv.org/abs/1912.00835)".
