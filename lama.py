@@ -1,10 +1,11 @@
-from lama import LAMA
 import torch
+import torch.nn.functional as F
+from torch.nn.parameter import Parameter
 from torch.nn import Module
 from typing import Callable
 
 
-class LAMAPooler(Module):
+class LAMA(Module):
     """
     This class implements the low rank factorization multi-head self-attention mechanism detailed
     in the paper `Low Rank Factorization for Compact Multi-Head Self-Attention
@@ -35,11 +36,36 @@ class LAMAPooler(Module):
         bias: bool = False 
     ) -> None:
         super().__init__()
-        self._lama = LAMA(num_heads, input_dim, activation, normalize, bias)
+        self._activation = (lambda x: x) if activation is None else activation
+        self._normalize = normalize
+        self._p = Parameter(torch.Tensor(input_dim, num_heads))
+        self._q = Parameter(torch.Tensor(input_dim, num_heads))
+        self._c = Parameter(torch.Tensor(input_dim, 1))
+
+        if bias:
+            self._bias = Parameter(torch.Tensor(out_features))
+        else:
+            self.register_parameter('_bias', None)
+        self.reset_parameters()
 
     def reset_parameters(self):
-        self._lama.reset_parameters()
+        torch.nn.init.xavier_uniform_(self._p)
+        torch.nn.init.xavier_uniform_(self._q)
+        torch.nn.init.xavier_uniform_(self._c)
+        if self._bias is not None:
+            self._bias.data.fill_(0)
 
     def forward(self, input, mask=None):
-        sentence_embedding_matrix = self._lama(input, mask) @ input
-        return torch.flatten(sentence_embedding_matrix)
+        similarities = self._forward_internal(input, mask)
+        
+        if self._normalize:
+            return F.softmax(similarities, dim=0)
+        else:
+            return similarities
+
+    def _forward_internal(self, input, mask=None):
+        # TODO (John): Missing L2 norm
+        scores = self._activation((self._p.t() @ self._c) * (self._q.t() @ input.t()))
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        return scores
