@@ -19,17 +19,18 @@ import torch
 from modules.lama import LAMA
 
 num_heads = 8      # Number of attention heads
-hidden_dim = 768   # Dimension of each tokens hidden representation
+input_dim = 768    # Dimension of each tokens hidden representation
+batch_size = 16    # Number of sentences/documents in the mini-batch
 max_seq_len = 100  # Maximum length of the input sequence
 
 # Create a random input sequence
-inputs = torch.randn(max_seq_len, hidden_dim)  
+inputs = torch.randn(batch_size, max_seq_len, input_dim)  
 
 # Initialize the attention mechanism
-lama = LAMA(num_heads, hidden_dim)
+lama = LAMA(num_heads, input_dim)
 
 output = lama(inputs)
-print(output.size())  # (num_heads,  max_seq_len)
+assert output.size() == (batch_size, num_heads, max_seq_len)
 ```
 
 ### LAMAPooler
@@ -39,15 +40,16 @@ import torch
 from modules.lama_pooler import LAMAPooler
 
 num_heads = 8      # Number of attention heads
-hidden_dim = 768   # Dimension of each tokens hidden representation
+input_dim = 768    # Dimension of each tokens hidden representation
+batch_size = 16    # Number of sentences/documents in the mini-batch
 max_seq_len = 100  # Maximum length of the input sequence
 
 # Create a random input sequence
-inputs = torch.randn(max_seq_len, hidden_dim)  
+inputs = torch.randn(batch_size, max_seq_len, input_dim)  
 
 # Initialize the pooler
-lama_pooler = LAMAPooler(num_heads, hidden_dim)
+lama_pooler = LAMAPooler(num_heads, input_dim)
 
 pooled_output = lama_pooler(inputs)
-print(pooled_output.size())  # num_heads * hidden_dim
+assert pooled_output.size() == (batch_size, num_heads * input_dim)
 ```
