@@ -12,7 +12,7 @@ The only dependency is PyTorch. Installation instructions can be found [here](ht
 
 ```python
 import torch
-from lama import LAMA
+from modules.lama import LAMA
 
 num_heads = 8      # Number of attention heads
 hidden_dim = 768   # Dimension of each tokens hidden representation
@@ -21,7 +21,7 @@ max_seq_len = 100  # Maximum length of the input sequence
 # Create a random input sequence
 inputs = torch.randn(max_seq_len, hidden_dim)  
 
-# Initialize the pooler
+# Initialize the attention mechanism
 lama = LAMA(num_heads, hidden_dim)
 
 output = lama(inputs)
@@ -32,7 +32,7 @@ print(output.size())  # (num_heads,  max_seq_len)
 
 ```python
 import torch
-from lama_pooler import LAMAPooler
+from modules.lama_pooler import LAMAPooler
 
 num_heads = 8      # Number of attention heads
 hidden_dim = 768   # Dimension of each tokens hidden representation
