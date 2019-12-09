@@ -56,17 +56,17 @@ class LAMA(Module):
         if self._bias is not None:
             self._bias.data.fill_(0)
 
-    def forward(self, input, mask=None):
-        similarities = self._forward_internal(input, mask)
+    def forward(self, inputs, mask=None):
+        similarities = self._forward_internal(inputs, mask)
 
         if self._normalize:
             return F.softmax(similarities, dim=0)
         else:
             return similarities
 
-    def _forward_internal(self, input, mask=None):
+    def _forward_internal(self, inputs, mask=None):
         # TODO (John): Missing L2 norm
-        scores = self._activation((self._p.t() @ self._c) * (self._q.t() @ input.t()))
+        scores = self._activation((self._p.t() @ self._c) * (self._q.t() @ inputs.t()))
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -1e9)
         return scores
