@@ -1,15 +1,16 @@
-from lama import LAMA
-import torch
-from torch.nn import Module
 from typing import Callable
 
+import torch
+import torch.nn.functional as F
 
-class LAMAPooler(Module):
+from lama import LAMA
+
+
+class LAMAPooler(LAMA):
     """
-    This class implements the low rank factorization multi-head self-attention mechanism detailed
-    in the paper `Low Rank Factorization for Compact Multi-Head Self-Attention
-    <https://arxiv.org/abs/1912.00835>`_ .
-    
+    A thin wrapper around ``LAMA``, which applies LAMA to ``input`` and returns the flattened
+    structed sentence embedding matrix.
+
     Parameters
     ----------
     num_heads : ``int``, required.
@@ -17,7 +18,7 @@ class LAMAPooler(Module):
     input_dim : ``int``, required.
         The size of the last dimension of the input tensor.
     activation : ``Callable``, optional (default=``torch.tanh``)
-        An activation function applied after the attention calculation. Default is 
+        An activation function applied after the attention calculation. Default is
         ``torch.tanh``. Set to ``None`` to use a linear activation (i.e. no activation).
     normalize : ``bool``, optional (default: ``True``)
         If true, we normalize the computed similarities with a softmax, to return a probability
@@ -29,17 +30,17 @@ class LAMAPooler(Module):
         self,
         num_heads: int,
         input_dim: int,
-        activation: Callable = torch.tanh,  
+        activation: Callable = torch.tanh,
         normalize: bool = True,
-        # TODO (John): How to get max_len without asking for it explicitly?
-        bias: bool = False 
+        bias: bool = False
     ) -> None:
-        super().__init__()
-        self._lama = LAMA(num_heads, input_dim, activation, normalize, bias)
-
-    def reset_parameters(self):
-        self._lama.reset_parameters()
+        super().__init__(num_heads, input_dim, activation, normalize, bias)
 
     def forward(self, input, mask=None):
-        sentence_embedding_matrix = self._lama(input, mask) @ input
+        similarities = self._forward_internal(input, mask)
+
+        if self._normalize:
+            similarities = F.softmax(similarities, dim=0)
+
+        sentence_embedding_matrix = similarities @ input
         return torch.flatten(sentence_embedding_matrix)
