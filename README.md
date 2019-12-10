@@ -8,7 +8,7 @@ This is a PyTorch implementation of the __L__ ow Rank F __a__ ctorization for Co
 
 ![](img/figure_1.jpg)
 
-> Figure 1 from [Low Rank Factorization for Compact Multi-Head Self-Attention](https://arxiv.org/abs/1912.00835)
+> Figure 1 from [Low Rank Factorization for Compact Multi-Head Self-Attention](https://arxiv.org/abs/1912.00835).
 
 Note: I am _not_ one of the authors on the paper.
 
