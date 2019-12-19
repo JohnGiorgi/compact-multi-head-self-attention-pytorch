@@ -11,11 +11,8 @@ class TestLAMA(object):
         assert lama._normalize == args['normalize']
         assert lama._p.size() == (args['input_dim'], args['num_heads'])
         assert lama._q.size() == (args['input_dim'], args['num_heads'])
-        assert lama._c.size() == (args['input_dim'], 1)
-        # TODO (John): Switch this when we figure out the bias and make it default to True
-        assert lama._bias is None
 
-    def test_output_forward_without_mask(self, lama):
+    def test_output_forward_without_mask_no_pool(self, lama):
         args, lama = lama()
 
         # Keep these small so testing is fast
@@ -27,7 +24,19 @@ class TestLAMA(object):
 
         assert output.size() == (batch_size, args['num_heads'], max_seq_len)
 
-    def test_output_forward_with_mask(self, lama):
+    def test_output_forward_without_mask_pool(self, lama):
+        args, lama = lama()
+
+        # Keep these small so testing is fast
+        batch_size = 4
+        max_seq_len = 25  # Maximum length of the input sequence
+
+        inputs = torch.randn(batch_size, max_seq_len, args['input_dim'])
+        output = lama(inputs, pool=True)
+
+        assert output.size() == (batch_size, args['num_heads'] * args['input_dim'])
+
+    def test_output_forward_with_mask_no_pool(self, lama):
         args, lama = lama(normalize=True)
 
         # Keep these small so testing is fast
@@ -43,7 +52,7 @@ class TestLAMA(object):
         # Make sure the probability is 0 at masked positions
         assert torch.allclose(output[:, :, -1], torch.zeros_like(output[:, :, -1]))
 
-    def test_output_forward_internal_without_mask(self, lama):
+    def test_output_forward_internal_without_mask_no_pool(self, lama):
         args, lama = lama()
 
         # Keep these small so testing is fast
@@ -55,7 +64,7 @@ class TestLAMA(object):
 
         assert output.size() == (batch_size, args['num_heads'], max_seq_len)
 
-    def test_attention_sums_to_one(self, lama):
+    def test_attention_sums_to_one_no_pool(self, lama):
         args, lama = lama(normalize=True)
 
         # Keep these small so testing is fast
