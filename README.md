@@ -29,19 +29,23 @@ max_seq_len = 100  # Maximum length of the input sequence
 
 # Create a random input sequence
 inputs = torch.randn(batch_size, max_seq_len, input_dim)  
+# Optionally, you can provide a mask over timesteps (e.g., for padding tokens)
+# Size: (batch_size, max_seq_len), 0 where timesteps should be masked and 1 otherwise
+mask = torch.ones(batch_size, max_seq_len)
+mask[:, -1] = 0
 
 # Initialize the attention mechanism
 lama = LAMA(num_heads, input_dim)
+output = lama(inputs, mask)
 
-output = lama(inputs)
 assert output.size() == (batch_size, num_heads, max_seq_len)
 ```
 
-### LAMAPooler
+### LAMAEncoder
 
 ```python
 import torch
-from modules.lama_pooler import LAMAPooler
+from modules.lama_encoder import LAMAEncoder
 
 num_heads = 8      # Number of attention heads
 input_dim = 768    # Dimension of each tokens hidden representation
@@ -50,10 +54,20 @@ max_seq_len = 100  # Maximum length of the input sequence
 
 # Create a random input sequence
 inputs = torch.randn(batch_size, max_seq_len, input_dim)  
+# Optionally, you can provide a mask over timesteps (e.g., for padding tokens)
+# Size: (batch_size, max_seq_len), 0 where timesteps should be masked and 1 otherwise
+mask = torch.ones(batch_size, max_seq_len)
+mask[:, -1] = 0
 
-# Initialize the pooler
-lama_pooler = LAMAPooler(num_heads, input_dim)
+# Initialize the encoder
+lama_encoder = LAMAEncoder(num_heads, input_dim)
+output = lama_encoder(inputs, mask)
 
-pooled_output = lama_pooler(inputs)
-assert pooled_output.size() == (batch_size, num_heads * input_dim)
+assert output.size() == (batch_size, num_heads, input_dim)
+
+# If output_dim is not None (default), the "structured sentence embedding" is flattened by concatenation and projected by a linear layer into a vector of this size
+lama_encoder = LAMAEncoder(num_heads, input_dim, output_dim=128)
+output = lama_encoder(inputs, mask)
+
+assert output.size() == (batch_size, 128)
 ```
