@@ -9,9 +9,9 @@ from .lama import LAMA
 
 class LAMAEncoder(Module):
     """
-    This class implements the low rank factorization multi-head self-attention mechanism described
-    in `"Low Rank Factorization for Compact Multi-Head Self-Attention"
-    <https://arxiv.org/abs/1912.00835>`_ by Mehta et al., 2019.
+    This class implements the encoder proposed in `"Low Rank Factorization for Compact Multi-Head Self-Attention"
+    <https://arxiv.org/abs/1912.00835>`_ by Mehta et al., 2019. This applies the attention weights of the LAMA
+    attention mechanism to the inputs returning the structured sentence embedding.
 
     Inputs:
 
@@ -21,7 +21,11 @@ class LAMAEncoder(Module):
 
     Output:
 
-    - attention: shape ``(batch_size, num_heads, max_sequence_length)``.
+    If ``output_dim`` is not None:
+        - structured sentence embedding: shape ``(batch_size, num_heads, input_dim)``.
+    Else:
+        - document embedding: shape ``(batch_size, output_dim)``.
+
 
     Parameters
     ----------
@@ -55,7 +59,7 @@ class LAMAEncoder(Module):
         else:
             self.projection_layer = None
 
-    def forward(self, inputs: torch.Tensor, mask: torch.Tensor = None, pool: bool = False) -> torch.Tensor:
+    def forward(self, inputs: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
         self_attention_matrix = self._attention(inputs, mask)
         structured_sentence_embedding = self_attention_matrix @ inputs
 
